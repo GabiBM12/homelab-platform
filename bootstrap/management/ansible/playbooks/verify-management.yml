@@ -1,0 +1,47 @@
+---
+- name: Verify the management laptop bootstrap
+  hosts: management
+  become: false
+  gather_facts: false
+
+  tasks:
+    - name: Check installed tool versions
+      ansible.builtin.command:
+        argv:
+          - "{{ item }}"
+          - --version
+      loop:
+        - git
+        - ansible
+        - terraform
+        - packer
+      changed_when: false
+
+    - name: Verify outbound HTTPS access to GitHub
+      ansible.builtin.uri:
+        url: https://github.com
+        method: HEAD
+        status_code: 200
+        timeout: 15
+
+    - name: Check whether the runner is registered
+      ansible.builtin.stat:
+        path: /opt/actions-runner/.runner
+      register: runner_registration
+
+    - name: Report runner registration state
+      ansible.builtin.assert:
+        that:
+          - runner_registration.stat.exists
+        fail_msg: >-
+          The management tools are installed, but the GitHub runner is not
+          registered. Run register-github-runner.yml.
+
+    - name: Check the GitHub runner service
+      ansible.builtin.command:
+        argv:
+          - /opt/actions-runner/svc.sh
+          - status
+      become: true
+      changed_when: false
+

@@ -1,0 +1,21 @@
+---
+management_ssh_allowed_cidr: "REPLACE_WITH_ADMIN_LAPTOP_IP/32"
+management_apply_package_upgrades: true
+
+management_common_packages:
+  - ca-certificates
+  - curl
+  - git
+  - gnupg
+  - gzip
+  - jq
+  - openssh-server
+  - python3
+  - python3-apt
+  - python3-pip
+  - python3-venv
+  - rsync
+  - tar
+  - ufw
+  - unattended-upgrades
+  - unzip

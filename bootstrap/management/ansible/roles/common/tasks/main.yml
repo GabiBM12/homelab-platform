@@ -1,0 +1,75 @@
+---
+- name: Update the apt package index
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Apply available package upgrades
+  ansible.builtin.apt:
+    upgrade: safe
+  when: management_apply_package_upgrades | bool
+
+- name: Install base management packages
+  ansible.builtin.apt:
+    name: "{{ management_common_packages }}"
+    state: present
+
+- name: Enable automatic package index refresh and unattended upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+- name: Install SSH hardening configuration
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/60-homelab-management.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+      X11Forwarding no
+      AllowAgentForwarding no
+  notify: Validate and reload SSH
+
+# This rule must exist before UFW is enabled so the current SSH session and the
+# recovery path from the administration laptop remain available.
+- name: Allow SSH from the administration laptop only
+  community.general.ufw:
+    rule: allow
+    direction: in
+    proto: tcp
+    from_ip: "{{ management_ssh_allowed_cidr }}"
+    to_port: "22"
+    comment: Homelab administration SSH
+
+- name: Set the default incoming firewall policy
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Set the default outgoing firewall policy
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+
+- name: Ensure SSH is enabled and running
+  ansible.builtin.service:
+    name: ssh
+    enabled: true
+    state: started
+
+- name: Flush handlers before the bootstrap SSH connection is closed
+  ansible.builtin.meta: flush_handlers
+

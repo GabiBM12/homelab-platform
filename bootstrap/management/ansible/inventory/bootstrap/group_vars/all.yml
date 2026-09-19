@@ -1,0 +1,25 @@
+---
+# Only this source address may initiate SSH to the management laptop.
+# Use the administration laptop's reserved address with a /32 suffix.
+management_ssh_allowed_cidr: "REPLACE_WITH_ADMIN_LAPTOP_IP/32"
+
+# Apply available package upgrades during bootstrap.
+management_apply_package_upgrades: true
+
+# Docker is unnecessary for Terraform, Packer, and Ansible. Enable it only when
+# a concrete workflow needs container builds. The runner is not added to the
+# Docker group unless both options are explicitly enabled.
+management_install_docker: false
+management_allow_runner_docker: false
+
+# GitHub runner settings. Obtain the version and SHA-256 value from GitHub's
+# "New self-hosted runner" page immediately before registration.
+github_runner_url: https://github.com/REPLACE_OWNER/REPLACE_REPOSITORY
+github_runner_version: REPLACE_WITH_VERSION
+github_runner_checksum: sha256:REPLACE_WITH_SHA256
+github_runner_name: "{{ inventory_hostname }}"
+github_runner_group: ""
+github_runner_labels:
+  - homelab-management
+  - proxmox
+  - infrastructure

@@ -1,0 +1,30 @@
+---
+- name: Bootstrap the homelab management laptop
+  hosts: management
+  become: true
+  gather_facts: true
+  serial: 1
+
+  pre_tasks:
+    - name: Require Ubuntu Server
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.distribution == "Ubuntu"
+          - ansible_facts.os_family == "Debian"
+        fail_msg: >-
+          This bootstrap currently supports Ubuntu only. Adapt and test the
+          package and firewall roles before using another distribution.
+
+    - name: Require a specific SSH source range
+      ansible.builtin.assert:
+        that:
+          - management_ssh_allowed_cidr is match('^([0-9]{1,3}\.){3}[0-9]{1,3}/32$')
+          - management_ssh_allowed_cidr != "0.0.0.0/32"
+        fail_msg: >-
+          Set management_ssh_allowed_cidr to the administration laptop's
+          reserved IPv4 address with a /32 suffix.
+
+  roles:
+    - role: common
+    - role: management_tools
+

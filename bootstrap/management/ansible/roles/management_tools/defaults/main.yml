@@ -1,0 +1,11 @@
+---
+management_install_docker: false
+management_allow_runner_docker: false
+
+management_tool_packages:
+  - ansible
+  - ansible-lint
+  - make
+  - shellcheck
+  - yamllint
+

@@ -1,0 +1,15 @@
+---
+- name: Register the GitHub Actions self-hosted runner
+  hosts: management
+  become: true
+  gather_facts: true
+  serial: 1
+
+  vars_prompt:
+    - name: github_runner_registration_token
+      prompt: GitHub runner registration token
+      private: true
+
+  roles:
+    - role: github_runner
+
